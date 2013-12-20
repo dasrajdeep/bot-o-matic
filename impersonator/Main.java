@@ -38,16 +38,16 @@ public class Main {
             
             fbchat.connect();
             
-            fbchat.getOnlineFriends();
-            
-//            Collection<RosterEntry> friendList=fbchat.getRoster();
+//            Collection<RosterEntry> friendList=fbchat.getOnlineFriends();
 //            
-//            System.out.println(friendList.size()+" friends listed.");
+//            System.out.println(friendList.size()+" friends are online.");
 //            
 //            for(Iterator friend=friendList.iterator();friend.hasNext();) {
 //                RosterEntry entry=(RosterEntry)friend.next();
-//                System.out.println(entry.toString());
+//                System.out.println(entry.getName());
 //            }
+            
+            while(true) {}
         } catch(Exception e) {
             e.printStackTrace();
         }

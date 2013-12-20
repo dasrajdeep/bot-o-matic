@@ -21,11 +21,14 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.jivesoftware.smack.Chat;
+import org.jivesoftware.smack.ChatManager;
+import org.jivesoftware.smack.ChatManagerListener;
 import org.jivesoftware.smack.Connection;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.MessageListener;
 import org.jivesoftware.smack.Roster;
 import org.jivesoftware.smack.RosterEntry;
+import org.jivesoftware.smack.RosterListener;
 import org.jivesoftware.smack.SASLAuthentication;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
@@ -46,6 +49,8 @@ public class FacebookChat {
     
     private Connection connection=null;
     private ConnectionConfiguration config=null;
+    private ChatManager chatManager=null;
+    private Roster roster=null;
     
     public FacebookChat(String userID, String password) {
         
@@ -63,11 +68,40 @@ public class FacebookChat {
         this.connection=new XMPPConnection(config);
         this.connection.connect();
         this.connection.login(this.userID, this.password, "impersonator");
+        this.chatManager=connection.getChatManager();
+        this.chatManager.addChatListener(new ChatManagerListener() {
+            @Override
+            public void chatCreated(Chat chat, boolean createdLocally) {
+                if(!createdLocally) chat.addMessageListener(new MessageListener() {
+                    @Override
+                    public void processMessage(Chat chat, Message message) {
+                        handleIncomingMessage(chat, message);
+                    }
+                });
+            }
+        });
+        
+        this.roster=connection.getRoster();
+        this.roster.addRosterListener(new RosterListener() {
+
+            @Override
+            public void entriesAdded(Collection<String> addresses) {}
+
+            @Override
+            public void entriesUpdated(Collection<String> addresses) {}
+
+            @Override
+            public void entriesDeleted(Collection<String> addresses) {}
+
+            @Override
+            public void presenceChanged(Presence presence) {
+                handlePresenceChange(presence);
+            }
+        });
     }
     
     public Collection getRoster() {
-        Collection<RosterEntry> entries=this.connection.getRoster().getEntries();
-        return entries;
+        return this.roster.getEntries();
     }
     
     public Collection getOnlineFriends() {
@@ -88,17 +122,36 @@ public class FacebookChat {
 
             @Override
             public void processMessage(Chat chat, Message message) {
-                out.println(message);
+                handleIncomingMessage(chat, message);
             }
         });
         
         return chat;
     }
-    
+     
     public void sendMessage(Chat chat, String receiverID, String messageText) throws XMPPException{
         Message message = new Message(receiverID, Message.Type.chat);
         message.setBody(messageText);
 
         chat.sendMessage(message);
     }
+    
+    private void handleIncomingMessage(Chat chat, Message message) {
+        String userName=this.roster.getEntry(chat.getParticipant()).getName();
+        
+        System.out.println(userName+" says: "+message.getBody());
+        
+        try {
+            this.sendMessage(chat, chat.getParticipant(), "Hello! This is virtual me in place of me! If you need to talk to the real me, you should ping sometime later. Cheers! :)");
+        } catch(XMPPException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void handlePresenceChange(Presence presence) {
+        String userName=this.roster.getEntry(presence.getFrom()).getName();
+        
+        System.out.println(userName+" "+presence.toString());
+    }
+    
 }
