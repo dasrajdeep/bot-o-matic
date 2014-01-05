@@ -1,4 +1,5 @@
-impersonator
-============
+bot-o-matic
+===========
 
-A Social Bot
+A Social Bot.
+
