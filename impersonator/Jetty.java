@@ -12,15 +12,18 @@ import org.eclipse.jetty.server.handler.ResourceHandler;
 public class Jetty {
 	
 	private Server server=null;
+        private ServerHandler serverHandler=null;
 	
-	public Jetty() {}
+	public Jetty(ServerHandler serverHandler) {
+            this.serverHandler=serverHandler;
+        }
 	
 	public void startServer(int port) throws Exception {
 		
 		server=new Server(port);
 		
 		HandlerList handlers=new HandlerList();
-		handlers.addHandler(new ServerHandler());
+		handlers.addHandler(this.serverHandler);
 		handlers.addHandler(this.configureDocumentRoot(".", "index.html"));
 		
 		server.setHandler(handlers);

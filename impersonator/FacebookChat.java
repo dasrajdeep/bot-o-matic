@@ -52,7 +52,11 @@ public class FacebookChat {
     private ChatManager chatManager=null;
     private Roster roster=null;
     
+    public MessageHandler messageHandler=null;
+    
     public FacebookChat(String userID, String password) {
+        
+        this.messageHandler=new MessageHandler(userID);
         
         this.userID=userID;
         this.password=password;
@@ -100,6 +104,10 @@ public class FacebookChat {
         });
     }
     
+    public void disconnect() {
+        this.connection.disconnect();
+    }
+    
     public Collection getRoster() {
         return this.roster.getEntries();
     }
@@ -139,19 +147,25 @@ public class FacebookChat {
     private void handleIncomingMessage(Chat chat, Message message) {
         String userName=this.roster.getEntry(chat.getParticipant()).getName();
         
+        if(message.getBody()==null) return;
+        
         System.out.println(userName+" says: "+message.getBody());
         
         try {
-            this.sendMessage(chat, chat.getParticipant(), "Hello! This is virtual me in place of me! If you need to talk to the real me, you should ping sometime later. Cheers! :)");
+            String replyMessage=this.messageHandler.generateReply(chat.getParticipant(), message.getBody());
+            System.out.println("I replied "+replyMessage);
+            if(replyMessage!=null) this.sendMessage(chat, chat.getParticipant(), replyMessage);
         } catch(XMPPException e) {
             e.printStackTrace();
         }
     }
     
     private void handlePresenceChange(Presence presence) {
+        if(roster==null) return;
+        
         String userName=this.roster.getEntry(presence.getFrom()).getName();
         
-        System.out.println(userName+" "+presence.toString());
+//        System.out.println(userName+" "+presence.toString());
     }
     
 }
